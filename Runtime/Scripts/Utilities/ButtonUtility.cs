@@ -205,7 +205,7 @@ namespace Dannect.Unity.Toolkit
         {
             if (button == null)
             {
-                SimGroundLogger.LogError("Button 컴포넌트가 null입니다.");
+                DannectLogger.LogError("Button 컴포넌트가 null입니다.");
                 return false;
             }
 
@@ -215,7 +215,7 @@ namespace Dannect.Unity.Toolkit
                 GameObject targetObject = SceneUtility.FindComponentInScene(className);
                 if (targetObject == null)
                 {
-                    SimGroundLogger.LogError($"{className} 컴포넌트를 가진 오브젝트를 찾을 수 없습니다.");
+                    DannectLogger.LogError($"{className} 컴포넌트를 가진 오브젝트를 찾을 수 없습니다.");
                     return false;
                 }
 
@@ -223,7 +223,7 @@ namespace Dannect.Unity.Toolkit
                 MonoBehaviour targetComponent = targetObject.GetComponent(className) as MonoBehaviour;
                 if (targetComponent == null)
                 {
-                    SimGroundLogger.LogError($"{className} 컴포넌트를 찾을 수 없습니다.");
+                    DannectLogger.LogError($"{className} 컴포넌트를 찾을 수 없습니다.");
                     return false;
                 }
 
@@ -242,7 +242,7 @@ namespace Dannect.Unity.Toolkit
 
                 // Inspector 업데이트
                 EditorUtility.SetDirty(button);
-                SimGroundLogger.LogVerbose("Persistent Listener 추가 완료");
+                DannectLogger.LogVerbose("Persistent Listener 추가 완료");
 #endif
 
                 // 5. Runtime Listener 추가 (백업용)
@@ -254,16 +254,16 @@ namespace Dannect.Unity.Toolkit
                     }
                     else
                     {
-                        SimGroundLogger.LogError($"메소드를 찾을 수 없습니다: {methodName}");
+                        DannectLogger.LogError($"메소드를 찾을 수 없습니다: {methodName}");
                     }
                 });
 
-                SimGroundLogger.LogSuccess($"메소드 연결 완료: {className}.{methodName}");
+                DannectLogger.LogSuccess($"메소드 연결 완료: {className}.{methodName}");
                 return true;
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException("메소드 연결 중 오류 발생", e);
+                DannectLogger.LogException("메소드 연결 중 오류 발생", e);
                 return false;
             }
         }
@@ -289,7 +289,7 @@ namespace Dannect.Unity.Toolkit
                 if (textComponent != null)
                 {
                     textComponent.text = newText;
-                    SimGroundLogger.LogVerbose($"버튼 텍스트 변경: {newText}");
+                    DannectLogger.LogVerbose($"버튼 텍스트 변경: {newText}");
                     return;
                 }
 
@@ -298,15 +298,15 @@ namespace Dannect.Unity.Toolkit
                 if (tmpComponent != null)
                 {
                     tmpComponent.text = newText;
-                    SimGroundLogger.LogVerbose($"버튼 TextMeshPro 변경: {newText}");
+                    DannectLogger.LogVerbose($"버튼 TextMeshPro 변경: {newText}");
                     return;
                 }
 
-                SimGroundLogger.LogWarning("버튼에서 Text 또는 TextMeshPro 컴포넌트를 찾을 수 없습니다.");
+                DannectLogger.LogWarning("버튼에서 Text 또는 TextMeshPro 컴포넌트를 찾을 수 없습니다.");
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException("버튼 텍스트 변경 중 오류 발생", e);
+                DannectLogger.LogException("버튼 텍스트 변경 중 오류 발생", e);
             }
         }
 
@@ -327,7 +327,7 @@ namespace Dannect.Unity.Toolkit
                 Image buttonImage = buttonObject.GetComponent<Image>();
                 if (buttonImage == null)
                 {
-                    SimGroundLogger.LogWarning("버튼에서 Image 컴포넌트를 찾을 수 없습니다.");
+                    DannectLogger.LogWarning("버튼에서 Image 컴포넌트를 찾을 수 없습니다.");
                     return;
                 }
 
@@ -335,7 +335,7 @@ namespace Dannect.Unity.Toolkit
                 if (newSprite != null)
                 {
                     buttonImage.sprite = newSprite;
-                    SimGroundLogger.LogVerbose($"버튼 이미지 변경 완료: {imagePath}");
+                    DannectLogger.LogVerbose($"버튼 이미지 변경 완료: {imagePath}");
 
 #if UNITY_EDITOR
                     EditorUtility.SetDirty(buttonImage);
@@ -343,12 +343,12 @@ namespace Dannect.Unity.Toolkit
                 }
                 else
                 {
-                    SimGroundLogger.LogWarning($"이미지를 로드할 수 없습니다: {imagePath}");
+                    DannectLogger.LogWarning($"이미지를 로드할 수 없습니다: {imagePath}");
                 }
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException("버튼 이미지 변경 중 오류 발생", e);
+                DannectLogger.LogException("버튼 이미지 변경 중 오류 발생", e);
             }
         }
 
@@ -376,7 +376,7 @@ namespace Dannect.Unity.Toolkit
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException("Sprite 로드 중 오류 발생", e);
+                DannectLogger.LogException("Sprite 로드 중 오류 발생", e);
                 return null;
             }
         }
@@ -391,24 +391,24 @@ namespace Dannect.Unity.Toolkit
         {
             if (button == null)
             {
-                SimGroundLogger.LogError("Button이 null입니다.");
+                DannectLogger.LogError("Button이 null입니다.");
                 return;
             }
 
-            SimGroundLogger.Log("=== 버튼 상태 정보 ===");
-            SimGroundLogger.Log($"이름: {button.name}");
-            SimGroundLogger.Log($"활성화: {button.gameObject.activeInHierarchy}");
-            SimGroundLogger.Log($"상호작용 가능: {button.interactable}");
-            SimGroundLogger.Log($"이벤트 수: {button.onClick.GetPersistentEventCount()}");
+            DannectLogger.Log("=== 버튼 상태 정보 ===");
+            DannectLogger.Log($"이름: {button.name}");
+            DannectLogger.Log($"활성화: {button.gameObject.activeInHierarchy}");
+            DannectLogger.Log($"상호작용 가능: {button.interactable}");
+            DannectLogger.Log($"이벤트 수: {button.onClick.GetPersistentEventCount()}");
             
             for (int i = 0; i < button.onClick.GetPersistentEventCount(); i++)
             {
                 var target = button.onClick.GetPersistentTarget(i);
                 var methodName = button.onClick.GetPersistentMethodName(i);
-                SimGroundLogger.Log($"  이벤트 {i}: {target?.GetType().Name}.{methodName}");
+                DannectLogger.Log($"  이벤트 {i}: {target?.GetType().Name}.{methodName}");
             }
             
-            SimGroundLogger.Log("===================");
+            DannectLogger.Log("===================");
         }
         #endregion
     }
