@@ -194,13 +194,13 @@ namespace Dannect.Unity.Toolkit.Editor
                 }
                 else
                 {
-                    SimGroundLogger.LogVerbose("Scene에 변경사항이 없습니다.");
+                    DannectLogger.LogVerbose("Scene에 변경사항이 없습니다.");
                     return true;
                 }
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException("Scene 저장 중 오류 발생", e);
+                DannectLogger.LogException("Scene 저장 중 오류 발생", e);
                 return false;
             }
         }
@@ -229,7 +229,7 @@ namespace Dannect.Unity.Toolkit.Editor
                 info += $"Scene 수정됨: {currentScene.isDirty}\n";
 
                 // 설정 파일 정보
-                SimGroundToolkitConfig config = LoadOrCreateConfig();
+                DannectToolkitConfig config = LoadOrCreateConfig();
                 if (config != null)
                 {
                     info += $"\n=== Toolkit 설정 ===\n";
@@ -244,7 +244,7 @@ namespace Dannect.Unity.Toolkit.Editor
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException("프로젝트 정보 수집 중 오류 발생", e);
+                DannectLogger.LogException("프로젝트 정보 수집 중 오류 발생", e);
                 return "프로젝트 정보를 수집할 수 없습니다.";
             }
         }
@@ -263,11 +263,11 @@ namespace Dannect.Unity.Toolkit.Editor
                 var method = type.GetMethod("Clear");
                 method.Invoke(new object(), null);
                 
-                SimGroundLogger.LogVerbose("Unity Console이 정리되었습니다.");
+                DannectLogger.LogVerbose("Unity Console이 정리되었습니다.");
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException("Unity Console 정리 중 오류 발생", e);
+                DannectLogger.LogException("Unity Console 정리 중 오류 발생", e);
             }
         }
         #endregion
@@ -303,11 +303,11 @@ namespace Dannect.Unity.Toolkit.Editor
             {
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
-                SimGroundLogger.LogVerbose("에셋 데이터베이스가 새로고침되었습니다.");
+                DannectLogger.LogVerbose("에셋 데이터베이스가 새로고침되었습니다.");
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException("에셋 새로고침 중 오류 발생", e);
+                DannectLogger.LogException("에셋 새로고침 중 오류 발생", e);
             }
         }
 
@@ -341,11 +341,11 @@ namespace Dannect.Unity.Toolkit.Editor
             // 설정 파일 로드 및 로거 설정
             try
             {
-                SimGroundToolkitConfig config = LoadOrCreateConfig();
+                DannectToolkitConfig config = LoadOrCreateConfig();
                 if (config != null)
                 {
-                    SimGroundLogger.UpdateSettingsFromConfig(config);
-                    SimGroundLogger.LogVerbose("SimGround Toolkit Editor Core가 초기화되었습니다.");
+                    DannectLogger.UpdateSettingsFromConfig(config);
+                    DannectLogger.LogVerbose("Dannect Toolkit Editor Core가 초기화되었습니다.");
                 }
             }
             catch (Exception e)

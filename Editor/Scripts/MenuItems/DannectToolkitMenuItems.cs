@@ -214,14 +214,14 @@ namespace Dannect.Unity.Toolkit.Editor
                 }
 
                 // 5. Scene 저장
-                SimGroundToolkitEditorCore.SaveSceneIfNeeded();
+                DannectToolkitEditorCore.SaveSceneIfNeeded();
 
-                SimGroundLogger.LogComplete("🎯 All-in-One 테스트가 성공적으로 완료되었습니다!");
+                DannectLogger.LogComplete("🎯 All-in-One 테스트가 성공적으로 완료되었습니다!");
                 return true;
             });
         }
 
-        [MenuItem("Tools/SimGround Toolkit/🚀 CLI Integration/Run Python CLI", priority = MENU_PRIORITY_CLI + 1)]
+        [MenuItem("Tools/Dannect Toolkit/🚀 CLI Integration/Run Python CLI", priority = MENU_PRIORITY_CLI + 1)]
         public static void RunPythonCLI()
         {
             try
@@ -248,75 +248,75 @@ namespace Dannect.Unity.Toolkit.Editor
 
                         if (!string.IsNullOrEmpty(output))
                         {
-                            SimGroundLogger.Log($"Python 출력:\n{output}");
+                            DannectLogger.Log($"Python 출력:\n{output}");
                         }
 
                         if (!string.IsNullOrEmpty(error))
                         {
-                            SimGroundLogger.LogError($"Python 오류:\n{error}");
+                            DannectLogger.LogError($"Python 오류:\n{error}");
                         }
 
                         if (process.ExitCode == 0)
                         {
-                            SimGroundLogger.LogSuccess("Python CLI 실행이 완료되었습니다.");
+                            DannectLogger.LogSuccess("Python CLI 실행이 완료되었습니다.");
                         }
                         else
                         {
-                            SimGroundLogger.LogError($"Python CLI 실행 실패 (종료 코드: {process.ExitCode})");
+                            DannectLogger.LogError($"Python CLI 실행 실패 (종료 코드: {process.ExitCode})");
                         }
                     }
                 }
                 else
                 {
-                    SimGroundLogger.LogError($"Python 스크립트를 찾을 수 없습니다: {pythonScript}");
+                    DannectLogger.LogError($"Python 스크립트를 찾을 수 없습니다: {pythonScript}");
                 }
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException("Python CLI 실행 중 오류 발생", e);
+                DannectLogger.LogException("Python CLI 실행 중 오류 발생", e);
             }
         }
         #endregion
 
         #region 🐛 디버그 도구
-        [MenuItem("Tools/SimGround Toolkit/🐛 Debug/Clear Console", priority = MENU_PRIORITY_DEBUG)]
+        [MenuItem("Tools/Dannect Toolkit/🐛 Debug/Clear Console", priority = MENU_PRIORITY_DEBUG)]
         public static void ClearConsole()
         {
-            SimGroundToolkitEditorCore.ClearUnityConsole();
+            DannectToolkitEditorCore.ClearUnityConsole();
         }
 
-        [MenuItem("Tools/SimGround Toolkit/🐛 Debug/Test Logger", priority = MENU_PRIORITY_DEBUG + 1)]
+        [MenuItem("Tools/Dannect Toolkit/🐛 Debug/Test Logger", priority = MENU_PRIORITY_DEBUG + 1)]
         public static void TestLogger()
         {
-            SimGroundLogger.Log("일반 로그 테스트");
-            SimGroundLogger.LogWarning("경고 로그 테스트");
-            SimGroundLogger.LogError("에러 로그 테스트");
-            SimGroundLogger.LogSuccess("성공 로그 테스트");
-            SimGroundLogger.LogStart("시작 로그 테스트");
-            SimGroundLogger.LogComplete("완료 로그 테스트");
-            SimGroundLogger.LogProgress("진행 로그 테스트");
-            SimGroundLogger.LogVerbose("상세 로그 테스트");
-            SimGroundLogger.LogEditor("에디터 로그 테스트");
+            DannectLogger.Log("일반 로그 테스트");
+            DannectLogger.LogWarning("경고 로그 테스트");
+            DannectLogger.LogError("에러 로그 테스트");
+            DannectLogger.LogSuccess("성공 로그 테스트");
+            DannectLogger.LogStart("시작 로그 테스트");
+            DannectLogger.LogComplete("완료 로그 테스트");
+            DannectLogger.LogProgress("진행 로그 테스트");
+            DannectLogger.LogVerbose("상세 로그 테스트");
+            DannectLogger.LogEditor("에디터 로그 테스트");
         }
 
-        [MenuItem("Tools/SimGround Toolkit/🐛 Debug/Show Config Contents", priority = MENU_PRIORITY_DEBUG + 2)]
+        [MenuItem("Tools/Dannect Toolkit/🐛 Debug/Show Config Contents", priority = MENU_PRIORITY_DEBUG + 2)]
         public static void ShowConfigContents()
         {
-            var config = SimGroundToolkitEditorCore.LoadOrCreateConfig();
+            var config = DannectToolkitEditorCore.LoadOrCreateConfig();
             if (config != null)
             {
                 string json = config.ExportToJson();
-                SimGroundLogger.Log($"현재 설정 내용:\n{json}");
+                DannectLogger.Log($"현재 설정 내용:\n{json}");
             }
         }
 
-        [MenuItem("Tools/SimGround Toolkit/🐛 Debug/Force Asset Refresh", priority = MENU_PRIORITY_DEBUG + 3)]
+        [MenuItem("Tools/Dannect Toolkit/🐛 Debug/Force Asset Refresh", priority = MENU_PRIORITY_DEBUG + 3)]
         public static void ForceAssetRefresh()
         {
-            SimGroundToolkitEditorCore.ForceAssetRefresh();
+            DannectToolkitEditorCore.ForceAssetRefresh();
         }
 
-        [MenuItem("Tools/SimGround Toolkit/🐛 Debug/Find Success_Pop (Debug)", priority = MENU_PRIORITY_DEBUG + 4)]
+        [MenuItem("Tools/Dannect Toolkit/🐛 Debug/Find Success_Pop (Debug)", priority = MENU_PRIORITY_DEBUG + 4)]
         public static void FindSuccessPopDebug()
         {
             GameObject successPop = SceneUtility.FindGameObjectByName("Success_Pop");
@@ -326,38 +326,38 @@ namespace Dannect.Unity.Toolkit.Editor
                 EditorGUIUtility.PingObject(successPop);
                 
                 string info = SceneUtility.GetGameObjectInfo(successPop);
-                SimGroundLogger.LogSuccess($"Success_Pop을 찾았습니다!\n{info}");
+                DannectLogger.LogSuccess($"Success_Pop을 찾았습니다!\n{info}");
                 
                 // 자식 오브젝트들도 확인
-                SimGroundLogger.Log("=== Success_Pop 자식 오브젝트들 ===");
+                DannectLogger.Log("=== Success_Pop 자식 오브젝트들 ===");
                 for (int i = 0; i < successPop.transform.childCount; i++)
                 {
                     Transform child = successPop.transform.GetChild(i);
-                    SimGroundLogger.Log($"  [{i}] {child.name} (활성: {child.gameObject.activeInHierarchy})");
+                    DannectLogger.Log($"  [{i}] {child.name} (활성: {child.gameObject.activeInHierarchy})");
                     
                     if (child.name.Contains("Btn") || child.name.Contains("Button"))
                     {
                         Button btnComponent = child.GetComponent<Button>();
                         if (btnComponent != null)
                         {
-                            SimGroundLogger.LogVerbose($"    Button 컴포넌트 발견! 이벤트 수: {btnComponent.onClick.GetPersistentEventCount()}");
+                            DannectLogger.LogVerbose($"    Button 컴포넌트 발견! 이벤트 수: {btnComponent.onClick.GetPersistentEventCount()}");
                         }
                     }
                 }
-                SimGroundLogger.Log("=================================");
+                DannectLogger.Log("=================================");
             }
             else
             {
-                SimGroundLogger.LogError("Success_Pop을 찾을 수 없습니다.");
+                DannectLogger.LogError("Success_Pop을 찾을 수 없습니다.");
                 
                 // 대체 검색
-                SimGroundLogger.LogWarning("대체 검색을 시도합니다...");
+                DannectLogger.LogWarning("대체 검색을 시도합니다...");
                 GameObject[] allObjects = Resources.FindObjectsOfTypeAll<GameObject>();
                 foreach (GameObject obj in allObjects)
                 {
                     if (obj.name.Contains("Success") && obj.hideFlags == HideFlags.None)
                     {
-                        SimGroundLogger.LogVerbose($"발견된 Success 관련 오브젝트: {obj.name} (활성: {obj.activeInHierarchy})");
+                        DannectLogger.LogVerbose($"발견된 Success 관련 오브젝트: {obj.name} (활성: {obj.activeInHierarchy})");
                     }
                 }
             }
@@ -374,26 +374,26 @@ namespace Dannect.Unity.Toolkit.Editor
         {
             try
             {
-                SimGroundToolkitEditorCore.ShowProgressBar(title, "처리 중...", 0.5f);
+                DannectToolkitEditorCore.ShowProgressBar(title, "처리 중...", 0.5f);
                 
                 bool success = operation();
                 
                 if (success)
                 {
-                    SimGroundLogger.LogComplete($"{title} 완료!");
+                    DannectLogger.LogComplete($"{title} 완료!");
                 }
                 else
                 {
-                    SimGroundLogger.LogError($"{title} 실패!");
+                    DannectLogger.LogError($"{title} 실패!");
                 }
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException($"{title} 중 오류 발생", e);
+                DannectLogger.LogException($"{title} 중 오류 발생", e);
             }
             finally
             {
-                SimGroundToolkitEditorCore.CloseProgressBar();
+                DannectToolkitEditorCore.CloseProgressBar();
             }
         }
         #endregion
