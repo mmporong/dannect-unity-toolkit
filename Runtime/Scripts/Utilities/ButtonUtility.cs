@@ -39,14 +39,14 @@ namespace Dannect.Unity.Toolkit
                 {
                     DannectLogger.LogWarning($"{newButtonName}이 이미 존재합니다. 기존 버튼을 제거합니다.");
 #if UNITY_EDITOR
-                    Object.DestroyImmediate(existingButton.gameObject);
+                    UnityEngine.Object.DestroyImmediate(existingButton.gameObject);
 #else
-                    Object.Destroy(existingButton.gameObject);
+                    UnityEngine.Object.Destroy(existingButton.gameObject);
 #endif
                 }
 
                 // 버튼 복사
-                GameObject newButton = Object.Instantiate(sourceButton, parent);
+                GameObject newButton = UnityEngine.Object.Instantiate(sourceButton, parent);
                 newButton.name = newButtonName;
 
                 // 위치 조정
@@ -165,9 +165,9 @@ namespace Dannect.Unity.Toolkit
                 {
                     DannectLogger.LogVerbose("기존 Button 컴포넌트를 제거합니다.");
 #if UNITY_EDITOR
-                    Object.DestroyImmediate(existingButton);
+                    UnityEngine.Object.DestroyImmediate(existingButton);
 #else
-                    Object.Destroy(existingButton);
+                    UnityEngine.Object.Destroy(existingButton);
 #endif
                 }
 

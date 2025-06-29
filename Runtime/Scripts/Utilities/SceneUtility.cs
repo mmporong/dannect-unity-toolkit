@@ -201,7 +201,7 @@ namespace Dannect.Unity.Toolkit
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException("루트 오브젝트 가져오기 중 오류 발생", e);
+                DannectLogger.LogException("루트 오브젝트 가져오기 중 오류 발생", e);
                 return new GameObject[0];
             }
         }
@@ -214,7 +214,7 @@ namespace Dannect.Unity.Toolkit
         {
             try
             {
-                SimGroundLogger.Log("=== Scene 계층구조 ===");
+                DannectLogger.Log("=== Scene 계층구조 ===");
                 
                 GameObject[] rootObjects = GetRootGameObjects();
                 foreach (GameObject rootObject in rootObjects)
@@ -222,11 +222,11 @@ namespace Dannect.Unity.Toolkit
                     LogObjectHierarchy(rootObject.transform, 0, maxDepth);
                 }
                 
-                SimGroundLogger.Log("=====================");
+                DannectLogger.Log("=====================");
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException("Scene 계층구조 출력 중 오류 발생", e);
+                DannectLogger.LogException("Scene 계층구조 출력 중 오류 발생", e);
             }
         }
 
@@ -243,7 +243,7 @@ namespace Dannect.Unity.Toolkit
 
             string indent = new string(' ', depth * 2);
             string status = transform.gameObject.activeInHierarchy ? "✓" : "✗";
-            SimGroundLogger.Log($"{indent}{status} {transform.name}");
+            DannectLogger.Log($"{indent}{status} {transform.name}");
 
             for (int i = 0; i < transform.childCount; i++)
             {
@@ -289,7 +289,7 @@ namespace Dannect.Unity.Toolkit
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException("GameObject 정보 분석 중 오류 발생", e);
+                DannectLogger.LogException("GameObject 정보 분석 중 오류 발생", e);
                 return "GameObject 정보를 분석할 수 없습니다.";
             }
         }
@@ -327,7 +327,7 @@ namespace Dannect.Unity.Toolkit
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException("Transform 정보 분석 중 오류 발생", e);
+                DannectLogger.LogException("Transform 정보 분석 중 오류 발생", e);
                 return "Transform 정보를 분석할 수 없습니다.";
             }
         }
@@ -345,7 +345,7 @@ namespace Dannect.Unity.Toolkit
 
             if (objectNames == null)
             {
-                SimGroundLogger.LogWarning("오브젝트 이름 목록이 null입니다.");
+                DannectLogger.LogWarning("오브젝트 이름 목록이 null입니다.");
                 return results;
             }
 
@@ -369,7 +369,7 @@ namespace Dannect.Unity.Toolkit
 
             if (predicate == null)
             {
-                SimGroundLogger.LogError("조건 함수가 null입니다.");
+                DannectLogger.LogError("조건 함수가 null입니다.");
                 return results;
             }
 
@@ -385,11 +385,11 @@ namespace Dannect.Unity.Toolkit
                     }
                 }
 
-                SimGroundLogger.LogVerbose($"조건을 만족하는 오브젝트 {results.Count}개를 찾았습니다.");
+                DannectLogger.LogVerbose($"조건을 만족하는 오브젝트 {results.Count}개를 찾았습니다.");
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException("조건부 오브젝트 검색 중 오류 발생", e);
+                DannectLogger.LogException("조건부 오브젝트 검색 중 오류 발생", e);
             }
 
             return results;
@@ -440,7 +440,7 @@ namespace Dannect.Unity.Toolkit
             }
             catch (Exception e)
             {
-                SimGroundLogger.LogException("Scene 통계 수집 중 오류 발생", e);
+                DannectLogger.LogException("Scene 통계 수집 중 오류 발생", e);
                 return "Scene 통계를 수집할 수 없습니다.";
             }
         }
