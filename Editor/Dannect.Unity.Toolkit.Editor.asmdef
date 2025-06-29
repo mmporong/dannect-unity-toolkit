@@ -1,0 +1,19 @@
+{
+    "name": "Dannect.Unity.Toolkit.Editor",
+    "rootNamespace": "Dannect.Unity.Toolkit.Editor",
+    "references": [
+        "Dannect.Unity.Toolkit",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+} 

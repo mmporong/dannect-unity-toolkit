@@ -1,0 +1,38 @@
+{
+  "name": "com.dannect.unity.toolkit",
+  "version": "1.0.0",
+  "displayName": "Dannect Unity Development Toolkit",
+  "description": "범용 Unity 개발 도구 패키지 - 버튼 유틸리티, CLI 자동화, WebGL 빌드, 프로젝트 관리 도구",
+  "unity": "2022.3",
+  "keywords": [
+    "utility",
+    "automation",
+    "cli",
+    "webgl",
+    "development",
+    "toolkit"
+  ],
+  "author": {
+    "name": "Dannect",
+    "email": "dannect@example.com",
+    "url": "https://github.com/dannect"
+  },
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dannect/unity-toolkit.git"
+  },
+  "license": "MIT",
+  "samples": [
+    {
+      "displayName": "Basic Button Utilities",
+      "description": "버튼 복사, 이벤트 연결 등 기본 사용 예제",
+      "path": "Samples~/BasicButtonUtilities"
+    },
+    {
+      "displayName": "CLI Automation",
+      "description": "CLI 자동화 도구 사용 예제",
+      "path": "Samples~/CLIAutomation"
+    }
+  ]
+} 
