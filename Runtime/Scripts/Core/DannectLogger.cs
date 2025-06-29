@@ -6,7 +6,7 @@ using System.Diagnostics;
 namespace Dannect.Unity.Toolkit
 {
     /// <summary>
-    /// Dannect Toolkit 전용 로깅 시스템
+    /// Dannect Unity Toolkit 전용 로깅 시스템
     /// </summary>
     public static class DannectLogger
     {
@@ -21,259 +21,205 @@ namespace Dannect.Unity.Toolkit
         
         // 색상 코드 (Rich Text 지원)
         private const string COLOR_INFO = "#00FF00";      // 초록색
-        private const string COLOR_WARNING = "#FFFF00";   // 노란색
+        private const string COLOR_WARNING = "#FFAA00";   // 주황색
         private const string COLOR_ERROR = "#FF0000";     // 빨간색
-        private const string COLOR_DEBUG = "#00FFFF";     // 시안색
+        private const string COLOR_SUCCESS = "#00FFFF";   // 시안색
+        private const string COLOR_START = "#FF00FF";     // 마젠타색
+        private const string COLOR_COMPLETE = "#FFFF00";  // 노란색
+        private const string COLOR_PROGRESS = "#00AAFF";  // 하늘색
         #endregion
 
-        #region 설정 메소드
+        #region 기본 로그 메소드
         /// <summary>
-        /// 로거 설정을 업데이트합니다.
-        /// </summary>
-        /// <param name="enableVerbose">상세 로깅 활성화</param>
-        /// <param name="enableEditorOnly">Editor 전용 로그 활성화</param>
-        /// <param name="enableFileLogging">파일 로깅 활성화</param>
-        public static void UpdateSettings(bool enableVerbose, bool enableEditorOnly, bool enableFileLogging)
-        {
-            s_enableVerboseLogging = enableVerbose;
-            s_enableUnityEditorOnlyLogs = enableEditorOnly;
-            s_enableFileLogging = enableFileLogging;
-            
-            Log($"로거 설정 업데이트: Verbose={enableVerbose}, EditorOnly={enableEditorOnly}, FileLogging={enableFileLogging}");
-        }
-
-        /// <summary>
-        /// Config 파일을 기반으로 로거 설정을 업데이트합니다.
-        /// </summary>
-        /// <param name="config">설정 파일</param>
-        public static void UpdateSettingsFromConfig(DannectToolkitConfig config)
-        {
-            if (config == null)
-            {
-                LogError("config가 null입니다.");
-                return;
-            }
-
-            var debugSettings = config.DebugSettings;
-            UpdateSettings(
-                debugSettings.enableVerboseLogging,
-                debugSettings.enableUnityEditorOnlyLogs,
-                debugSettings.enableFileLogging
-            );
-        }
-        #endregion
-
-        #region 기본 로깅 메소드
-        /// <summary>
-        /// 일반 정보 로그를 출력합니다.
+        /// 일반 정보 로그
         /// </summary>
         /// <param name="message">로그 메시지</param>
-        [Conditional("UNITY_EDITOR")]
-        [Conditional("DEVELOPMENT_BUILD")]
-        public static void Log(string message)
+        /// <param name="context">컨텍스트 오브젝트 (optional)</param>
+        public static void Log(object message, UnityEngine.Object context = null)
         {
-            if (!s_enableVerboseLogging)
-                return;
-
-            string formattedMessage = FormatMessage(message, LogType.Log);
-            
-            UnityEngine.Debug.Log($"<color={COLOR_INFO}>{formattedMessage}</color>");
-            
-            if (s_enableFileLogging)
-                WriteToFile(formattedMessage, LogType.Log);
+            string formattedMessage = FormatMessage(message.ToString(), COLOR_INFO);
+            UnityEngine.Debug.Log(formattedMessage, context);
+            WriteToFile($"INFO: {message}");
         }
 
         /// <summary>
-        /// 경고 로그를 출력합니다.
+        /// 경고 로그
         /// </summary>
         /// <param name="message">경고 메시지</param>
-        public static void LogWarning(string message)
+        /// <param name="context">컨텍스트 오브젝트 (optional)</param>
+        public static void LogWarning(object message, UnityEngine.Object context = null)
         {
-            string formattedMessage = FormatMessage(message, LogType.Warning);
-            
-            UnityEngine.Debug.LogWarning($"<color={COLOR_WARNING}>{formattedMessage}</color>");
-            
-            if (s_enableFileLogging)
-                WriteToFile(formattedMessage, LogType.Warning);
+            string formattedMessage = FormatMessage(message.ToString(), COLOR_WARNING);
+            UnityEngine.Debug.LogWarning(formattedMessage, context);
+            WriteToFile($"WARNING: {message}");
         }
 
         /// <summary>
-        /// 에러 로그를 출력합니다.
+        /// 에러 로그
         /// </summary>
         /// <param name="message">에러 메시지</param>
-        public static void LogError(string message)
+        /// <param name="context">컨텍스트 오브젝트 (optional)</param>
+        public static void LogError(object message, UnityEngine.Object context = null)
         {
-            string formattedMessage = FormatMessage(message, LogType.Error);
-            
-            UnityEngine.Debug.LogError($"<color={COLOR_ERROR}>{formattedMessage}</color>");
-            
-            if (s_enableFileLogging)
-                WriteToFile(formattedMessage, LogType.Error);
-        }
-
-        /// <summary>
-        /// 디버그 로그를 출력합니다 (Editor 전용).
-        /// </summary>
-        /// <param name="message">디버그 메시지</param>
-        [Conditional("UNITY_EDITOR")]
-        public static void LogDebug(string message)
-        {
-            if (!s_enableUnityEditorOnlyLogs || !s_enableVerboseLogging)
-                return;
-
-            string formattedMessage = FormatMessage($"[DEBUG] {message}", LogType.Log);
-            
-            UnityEngine.Debug.Log($"<color={COLOR_DEBUG}>{formattedMessage}</color>");
-            
-            if (s_enableFileLogging)
-                WriteToFile(formattedMessage, LogType.Log);
+            string formattedMessage = FormatMessage(message.ToString(), COLOR_ERROR);
+            UnityEngine.Debug.LogError(formattedMessage, context);
+            WriteToFile($"ERROR: {message}");
         }
         #endregion
 
-        #region 고급 로깅 메소드
+        #region 확장 로그 메소드
         /// <summary>
-        /// 예외 정보와 함께 에러 로그를 출력합니다.
+        /// 성공 로그 (초록색)
         /// </summary>
-        /// <param name="message">에러 메시지</param>
-        /// <param name="exception">예외 객체</param>
-        public static void LogException(string message, Exception exception)
+        /// <param name="message">성공 메시지</param>
+        /// <param name="context">컨텍스트 오브젝트 (optional)</param>
+        public static void LogSuccess(object message, UnityEngine.Object context = null)
         {
-            string fullMessage = $"{message}\n예외: {exception?.Message}\n스택 트레이스:\n{exception?.StackTrace}";
-            LogError(fullMessage);
+            string formattedMessage = FormatMessage($"✅ {message}", COLOR_SUCCESS);
+            UnityEngine.Debug.Log(formattedMessage, context);
+            WriteToFile($"SUCCESS: {message}");
         }
 
         /// <summary>
-        /// 조건부 로그를 출력합니다.
+        /// 시작 로그 (마젠타색)
         /// </summary>
-        /// <param name="condition">조건</param>
-        /// <param name="message">로그 메시지</param>
-        /// <param name="logType">로그 타입</param>
-        [Conditional("UNITY_EDITOR")]
-        [Conditional("DEVELOPMENT_BUILD")]
-        public static void LogIf(bool condition, string message, LogType logType = LogType.Log)
+        /// <param name="message">시작 메시지</param>
+        /// <param name="context">컨텍스트 오브젝트 (optional)</param>
+        public static void LogStart(object message, UnityEngine.Object context = null)
         {
-            if (!condition)
-                return;
+            string formattedMessage = FormatMessage($"🚀 {message}", COLOR_START);
+            UnityEngine.Debug.Log(formattedMessage, context);
+            WriteToFile($"START: {message}");
+        }
 
-            switch (logType)
+        /// <summary>
+        /// 완료 로그 (노란색)
+        /// </summary>
+        /// <param name="message">완료 메시지</param>
+        /// <param name="context">컨텍스트 오브젝트 (optional)</param>
+        public static void LogComplete(object message, UnityEngine.Object context = null)
+        {
+            string formattedMessage = FormatMessage($"🎯 {message}", COLOR_COMPLETE);
+            UnityEngine.Debug.Log(formattedMessage, context);
+            WriteToFile($"COMPLETE: {message}");
+        }
+
+        /// <summary>
+        /// 진행 상황 로그 (하늘색)
+        /// </summary>
+        /// <param name="message">진행 메시지</param>
+        /// <param name="context">컨텍스트 오브젝트 (optional)</param>
+        public static void LogProgress(object message, UnityEngine.Object context = null)
+        {
+            string formattedMessage = FormatMessage($"🔄 {message}", COLOR_PROGRESS);
+            UnityEngine.Debug.Log(formattedMessage, context);
+            WriteToFile($"PROGRESS: {message}");
+        }
+
+        /// <summary>
+        /// 예외 로그 (상세한 스택 트레이스 포함)
+        /// </summary>
+        /// <param name="message">예외 메시지</param>
+        /// <param name="exception">예외 객체</param>
+        /// <param name="context">컨텍스트 오브젝트 (optional)</param>
+        public static void LogException(string message, Exception exception, UnityEngine.Object context = null)
+        {
+            string fullMessage = $"{message}\n예외: {exception.Message}\n스택 트레이스:\n{exception.StackTrace}";
+            string formattedMessage = FormatMessage($"💥 {fullMessage}", COLOR_ERROR);
+            UnityEngine.Debug.LogError(formattedMessage, context);
+            WriteToFile($"EXCEPTION: {fullMessage}");
+        }
+        #endregion
+
+        #region 조건부 로그 메소드
+        /// <summary>
+        /// 에디터에서만 출력되는 로그
+        /// </summary>
+        /// <param name="message">로그 메시지</param>
+        /// <param name="context">컨텍스트 오브젝트 (optional)</param>
+        [Conditional("UNITY_EDITOR")]
+        public static void LogEditor(object message, UnityEngine.Object context = null)
+        {
+            if (s_enableUnityEditorOnlyLogs)
             {
-                case LogType.Log:
-                    Log(message);
-                    break;
-                case LogType.Warning:
-                    LogWarning(message);
-                    break;
-                case LogType.Error:
-                    LogError(message);
-                    break;
+                Log($"[Editor Only] {message}", context);
             }
         }
 
         /// <summary>
-        /// 성공 메시지를 출력합니다.
+        /// 상세 로그 (Verbose 모드에서만 출력)
         /// </summary>
-        /// <param name="message">성공 메시지</param>
-        [Conditional("UNITY_EDITOR")]
-        [Conditional("DEVELOPMENT_BUILD")]
-        public static void LogSuccess(string message)
+        /// <param name="message">상세 메시지</param>
+        /// <param name="context">컨텍스트 오브젝트 (optional)</param>
+        public static void LogVerbose(object message, UnityEngine.Object context = null)
         {
-            Log($"✅ {message}");
+            if (s_enableVerboseLogging)
+            {
+                Log($"[Verbose] {message}", context);
+            }
         }
 
         /// <summary>
-        /// 진행 상황을 출력합니다.
+        /// 개발 빌드에서만 출력되는 로그
         /// </summary>
-        /// <param name="message">진행 메시지</param>
-        [Conditional("UNITY_EDITOR")]
+        /// <param name="message">로그 메시지</param>
+        /// <param name="context">컨텍스트 오브젝트 (optional)</param>
         [Conditional("DEVELOPMENT_BUILD")]
-        public static void LogProgress(string message)
-        {
-            Log($"🔄 {message}");
-        }
-
-        /// <summary>
-        /// 시작 메시지를 출력합니다.
-        /// </summary>
-        /// <param name="message">시작 메시지</param>
         [Conditional("UNITY_EDITOR")]
-        [Conditional("DEVELOPMENT_BUILD")]
-        public static void LogStart(string message)
+        public static void LogDevelopment(object message, UnityEngine.Object context = null)
         {
-            Log($"🚀 {message}");
-        }
-
-        /// <summary>
-        /// 완료 메시지를 출력합니다.
-        /// </summary>
-        /// <param name="message">완료 메시지</param>
-        [Conditional("UNITY_EDITOR")]
-        [Conditional("DEVELOPMENT_BUILD")]
-        public static void LogComplete(string message)
-        {
-            Log($"🎯 {message}");
+            Log($"[Development] {message}", context);
         }
         #endregion
 
         #region 유틸리티 메소드
         /// <summary>
-        /// 로그 메시지를 포맷팅합니다.
+        /// 로그 설정을 업데이트합니다
         /// </summary>
-        /// <param name="message">원본 메시지</param>
-        /// <param name="logType">로그 타입</param>
-        /// <returns>포맷팅된 메시지</returns>
-        private static string FormatMessage(string message, LogType logType)
+        /// <param name="enableVerbose">상세 로그 활성화</param>
+        /// <param name="enableEditorOnly">에디터 전용 로그 활성화</param>
+        /// <param name="enableFileLogging">파일 로깅 활성화</param>
+        public static void UpdateSettings(bool enableVerbose = true, bool enableEditorOnly = true, bool enableFileLogging = false)
         {
-            string timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
-            string typePrefix = GetLogTypePrefix(logType);
+            s_enableVerboseLogging = enableVerbose;
+            s_enableUnityEditorOnlyLogs = enableEditorOnly;
+            s_enableFileLogging = enableFileLogging;
             
-            return $"{LOG_PREFIX} [{timestamp}] {typePrefix} {message}";
+            Log($"로거 설정 업데이트됨 - Verbose: {enableVerbose}, EditorOnly: {enableEditorOnly}, FileLogging: {enableFileLogging}");
         }
 
         /// <summary>
-        /// 로그 타입에 따른 접두사를 가져옵니다.
+        /// Config 파일에서 설정을 업데이트합니다
         /// </summary>
-        /// <param name="logType">로그 타입</param>
-        /// <returns>접두사 문자열</returns>
-        private static string GetLogTypePrefix(LogType logType)
+        /// <param name="config">설정 파일</param>
+        public static void UpdateSettingsFromConfig(DannectToolkitConfig config)
         {
-            switch (logType)
+            if (config?.DebugSettings != null)
             {
-                case LogType.Error:
-                    return "[ERROR]";
-                case LogType.Assert:
-                    return "[ASSERT]";
-                case LogType.Warning:
-                    return "[WARNING]";
-                case LogType.Log:
-                    return "[INFO]";
-                case LogType.Exception:
-                    return "[EXCEPTION]";
-                default:
-                    return "[UNKNOWN]";
+                UpdateSettings(
+                    config.DebugSettings.enableVerboseLogging,
+                    config.DebugSettings.enableUnityEditorOnlyLogs,
+                    config.DebugSettings.enableFileLogging
+                );
             }
         }
 
         /// <summary>
-        /// 로그를 파일에 저장합니다.
+        /// Unity Console을 지웁니다
         /// </summary>
-        /// <param name="message">로그 메시지</param>
-        /// <param name="logType">로그 타입</param>
-        private static void WriteToFile(string message, LogType logType)
+        public static void ClearConsole()
         {
-            try
-            {
-                string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {GetLogTypePrefix(logType)} {message}\n";
-                File.AppendAllText(LOG_FILE_PATH, logEntry);
-            }
-            catch (Exception e)
-            {
-                // 파일 로깅 실패는 콘솔에만 출력
-                UnityEngine.Debug.LogError($"파일 로깅 실패: {e.Message}");
-            }
+#if UNITY_EDITOR
+            var assembly = System.Reflection.Assembly.GetAssembly(typeof(UnityEditor.Editor));
+            var type = assembly.GetType("UnityEditor.LogEntries");
+            var method = type.GetMethod("Clear");
+            method.Invoke(new object(), null);
+            Log("Unity Console이 정리되었습니다.");
+#endif
         }
 
         /// <summary>
-        /// 로그 파일을 정리합니다.
+        /// 로그 파일을 지웁니다
         /// </summary>
         public static void ClearLogFile()
         {
@@ -282,17 +228,17 @@ namespace Dannect.Unity.Toolkit
                 if (File.Exists(LOG_FILE_PATH))
                 {
                     File.Delete(LOG_FILE_PATH);
-                    Log("로그 파일이 정리되었습니다.");
+                    Log("로그 파일이 삭제되었습니다.");
                 }
             }
             catch (Exception e)
             {
-                LogError($"로그 파일 정리 실패: {e.Message}");
+                LogError($"로그 파일 삭제 실패: {e.Message}");
             }
         }
 
         /// <summary>
-        /// 로그 파일 경로를 가져옵니다.
+        /// 로그 파일 경로를 반환합니다
         /// </summary>
         /// <returns>로그 파일 경로</returns>
         public static string GetLogFilePath()
@@ -301,43 +247,40 @@ namespace Dannect.Unity.Toolkit
         }
         #endregion
 
-        #region Unity Editor 전용 메소드
-#if UNITY_EDITOR
+        #region 내부 메소드
         /// <summary>
-        /// Unity Console 창을 정리합니다.
+        /// 메시지를 포맷팅합니다
         /// </summary>
-        [Conditional("UNITY_EDITOR")]
-        public static void ClearConsole()
+        /// <param name="message">원본 메시지</param>
+        /// <param name="color">색상 코드</param>
+        /// <returns>포맷팅된 메시지</returns>
+        private static string FormatMessage(string message, string color)
         {
-            var assembly = System.Reflection.Assembly.GetAssembly(typeof(UnityEditor.Editor));
-            var type = assembly.GetType("UnityEditor.LogEntries");
-            var method = type.GetMethod("Clear");
-            method.Invoke(new object(), null);
-            
-            Log("Unity Console이 정리되었습니다.");
+            string timestamp = DateTime.Now.ToString("HH:mm:ss");
+            return $"{LOG_PREFIX} <color={color}>[{timestamp}] {message}</color>";
         }
 
         /// <summary>
-        /// Editor에서 진행률을 표시합니다.
+        /// 파일에 로그를 작성합니다
         /// </summary>
-        /// <param name="title">제목</param>
-        /// <param name="info">정보</param>
-        /// <param name="progress">진행률 (0~1)</param>
-        [Conditional("UNITY_EDITOR")]
-        public static void DisplayProgressBar(string title, string info, float progress)
+        /// <param name="message">파일에 작성할 메시지</param>
+        private static void WriteToFile(string message)
         {
-            UnityEditor.EditorUtility.DisplayProgressBar(title, info, progress);
-        }
+            if (!s_enableFileLogging)
+                return;
 
-        /// <summary>
-        /// 진행률 표시를 종료합니다.
-        /// </summary>
-        [Conditional("UNITY_EDITOR")]
-        public static void ClearProgressBar()
-        {
-            UnityEditor.EditorUtility.ClearProgressBar();
+            try
+            {
+                string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                string logEntry = $"[{timestamp}] {message}\n";
+                File.AppendAllText(LOG_FILE_PATH, logEntry);
+            }
+            catch (Exception e)
+            {
+                // 파일 쓰기 실패해도 Unity Console에는 출력하지 않음 (무한 루프 방지)
+                UnityEngine.Debug.LogWarning($"로그 파일 쓰기 실패: {e.Message}");
+            }
         }
-#endif
         #endregion
     }
 } 

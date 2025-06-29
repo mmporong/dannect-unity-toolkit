@@ -1,64 +1,62 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace Dannect.Unity.Toolkit
 {
     /// <summary>
-    /// Scene 관리, GameObject 검색 등의 유틸리티 기능을 제공합니다.
+    /// Scene 관리, GameObject 검색, 계층구조 분석 등의 유틸리티 기능을 제공합니다.
     /// </summary>
     public static class SceneUtility
     {
-        #region GameObject 찾기
+        #region GameObject 검색
         /// <summary>
-        /// 이름으로 GameObject를 찾습니다 (비활성화된 오브젝트 포함).
+        /// 이름으로 GameObject를 찾습니다. (비활성화된 오브젝트 포함)
         /// </summary>
         /// <param name="objectName">찾을 오브젝트 이름</param>
-        /// <param name="exactMatch">정확한 이름 매칭 여부</param>
-        /// <returns>찾은 GameObject</returns>
-        public static GameObject FindGameObjectByName(string objectName, bool exactMatch = true)
+        /// <returns>찾은 GameObject (찾지 못한 경우 null)</returns>
+        public static GameObject FindGameObjectByName(string objectName)
         {
             if (string.IsNullOrEmpty(objectName))
             {
-                DannectLogger.LogError("objectName이 비어있습니다.");
+                DannectLogger.LogError("오브젝트 이름이 null 또는 비어있습니다.");
                 return null;
             }
 
             try
             {
                 // 1. 활성화된 오브젝트에서 먼저 찾기
-                GameObject activeObj = GameObject.Find(objectName);
-                if (activeObj != null)
+                GameObject activeObject = GameObject.Find(objectName);
+                if (activeObject != null)
                 {
-                    DannectLogger.Log($"활성화된 오브젝트에서 발견: {objectName}");
-                    return activeObj;
+                    DannectLogger.LogVerbose($"활성화된 오브젝트에서 찾음: {objectName}");
+                    return activeObject;
                 }
 
-                // 2. 모든 오브젝트에서 찾기 (비활성화 포함)
-                GameObject[] allObjects = Resources.FindObjectsOfTypeAll<GameObject>();
-                foreach (GameObject obj in allObjects)
+                // 2. 비활성화된 오브젝트 포함하여 모든 Transform 검색
+                Transform[] allTransforms = Resources.FindObjectsOfTypeAll<Transform>();
+                foreach (Transform transform in allTransforms)
                 {
-                    // Scene에 있는 오브젝트만 검색 (Prefab 제외)
-                    if (obj.scene.isLoaded)
+                    if (transform.name == objectName && transform.hideFlags == HideFlags.None)
                     {
-                        if (exactMatch)
-                        {
-                            if (obj.name == objectName)
-                            {
-                                DannectLogger.Log($"비활성화 오브젝트에서 발견: {objectName}");
-                                return obj;
-                            }
-                        }
-                        else
-                        {
-                            if (obj.name.Contains(objectName))
-                            {
-                                DannectLogger.Log($"부분 매칭으로 발견: {obj.name} (검색어: {objectName})");
-                                return obj;
-                            }
-                        }
+                        DannectLogger.LogVerbose($"비활성화된 오브젝트에서 찾음: {objectName}");
+                        return transform.gameObject;
+                    }
+                }
+
+                // 3. 씬의 루트 오브젝트들을 직접 검색
+                Scene currentScene = SceneManager.GetActiveScene();
+                GameObject[] rootObjects = currentScene.GetRootGameObjects();
+                
+                foreach (GameObject rootObject in rootObjects)
+                {
+                    GameObject found = FindGameObjectRecursive(rootObject.transform, objectName);
+                    if (found != null)
+                    {
+                        DannectLogger.LogVerbose($"재귀 검색에서 찾음: {objectName}");
+                        return found;
                     }
                 }
 
@@ -67,281 +65,383 @@ namespace Dannect.Unity.Toolkit
             }
             catch (Exception e)
             {
-                DannectLogger.LogError($"GameObject 찾기 실패: {e.Message}");
+                DannectLogger.LogException($"오브젝트 검색 중 오류 발생: {objectName}", e);
                 return null;
             }
         }
 
         /// <summary>
-        /// 특정 타입의 컴포넌트를 가진 오브젝트를 찾습니다.
+        /// 재귀적으로 GameObject를 검색합니다.
         /// </summary>
-        /// <typeparam name="T">찾을 컴포넌트 타입</typeparam>
-        /// <param name="objectName">오브젝트 이름 (선택사항)</param>
-        /// <returns>찾은 컴포넌트</returns>
-        public static T FindComponentInScene<T>(string objectName = null) where T : Component
+        /// <param name="parent">검색할 부모 Transform</param>
+        /// <param name="targetName">찾을 오브젝트 이름</param>
+        /// <returns>찾은 GameObject (찾지 못한 경우 null)</returns>
+        private static GameObject FindGameObjectRecursive(Transform parent, string targetName)
         {
+            if (parent.name == targetName)
+            {
+                return parent.gameObject;
+            }
+
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                GameObject result = FindGameObjectRecursive(parent.GetChild(i), targetName);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 특정 컴포넌트를 가진 오브젝트를 Scene에서 찾습니다.
+        /// </summary>
+        /// <param name="componentName">컴포넌트 이름</param>
+        /// <returns>컴포넌트를 가진 GameObject</returns>
+        public static GameObject FindComponentInScene(string componentName)
+        {
+            if (string.IsNullOrEmpty(componentName))
+            {
+                DannectLogger.LogError("컴포넌트 이름이 null 또는 비어있습니다.");
+                return null;
+            }
+
             try
             {
-                if (!string.IsNullOrEmpty(objectName))
+                // 모든 MonoBehaviour 검색
+                MonoBehaviour[] allComponents = Resources.FindObjectsOfTypeAll<MonoBehaviour>();
+                
+                foreach (MonoBehaviour component in allComponents)
                 {
-                    // 특정 이름의 오브젝트에서 컴포넌트 찾기
-                    GameObject targetObj = FindGameObjectByName(objectName);
-                    if (targetObj != null)
+                    if (component != null && 
+                        component.GetType().Name == componentName && 
+                        component.hideFlags == HideFlags.None)
                     {
-                        T component = targetObj.GetComponent<T>();
-                        if (component != null)
-                        {
-                            DannectLogger.Log($"컴포넌트 발견: {typeof(T).Name} in {objectName}");
-                            return component;
-                        }
+                        DannectLogger.LogVerbose($"컴포넌트를 가진 오브젝트 찾음: {componentName} in {component.gameObject.name}");
+                        return component.gameObject;
                     }
                 }
 
-                // Scene의 모든 오브젝트에서 컴포넌트 찾기
-                T[] components = UnityEngine.Object.FindObjectsOfType<T>(true);
-                if (components.Length > 0)
-                {
-                    DannectLogger.Log($"컴포넌트 발견: {typeof(T).Name} in {components[0].gameObject.name}");
-                    return components[0];
-                }
-
-                DannectLogger.LogWarning($"컴포넌트를 찾을 수 없습니다: {typeof(T).Name}");
+                DannectLogger.LogWarning($"컴포넌트를 가진 오브젝트를 찾을 수 없습니다: {componentName}");
                 return null;
             }
             catch (Exception e)
             {
-                DannectLogger.LogError($"컴포넌트 찾기 실패: {e.Message}");
+                DannectLogger.LogException($"컴포넌트 검색 중 오류 발생: {componentName}", e);
                 return null;
             }
         }
 
         /// <summary>
-        /// 여러 이름으로 GameObject를 찾습니다.
+        /// 여러 이름 중 하나라도 일치하는 GameObject를 찾습니다.
         /// </summary>
         /// <param name="objectNames">찾을 오브젝트 이름들</param>
-        /// <returns>찾은 GameObject들의 리스트</returns>
-        public static List<GameObject> FindGameObjectsByNames(params string[] objectNames)
+        /// <returns>찾은 GameObject (찾지 못한 경우 null)</returns>
+        public static GameObject FindAnyGameObject(params string[] objectNames)
         {
-            List<GameObject> foundObjects = new List<GameObject>();
-
-            foreach (string name in objectNames)
+            if (objectNames == null || objectNames.Length == 0)
             {
-                GameObject obj = FindGameObjectByName(name);
-                if (obj != null)
-                {
-                    foundObjects.Add(obj);
-                }
-            }
-
-            DannectLogger.Log($"총 {foundObjects.Count}개의 오브젝트를 찾았습니다.");
-            return foundObjects;
-        }
-        #endregion
-
-        #region Scene 관리
-        /// <summary>
-        /// 현재 활성 Scene 정보를 가져옵니다.
-        /// </summary>
-        /// <returns>활성 Scene</returns>
-        public static Scene GetActiveScene()
-        {
-            return SceneManager.GetActiveScene();
-        }
-
-        /// <summary>
-        /// Scene이 로드되어 있는지 확인합니다.
-        /// </summary>
-        /// <param name="sceneName">Scene 이름</param>
-        /// <returns>로드 여부</returns>
-        public static bool IsSceneLoaded(string sceneName)
-        {
-            if (string.IsNullOrEmpty(sceneName))
-                return false;
-
-            Scene scene = SceneManager.GetSceneByName(sceneName);
-            return scene.isLoaded;
-        }
-
-        /// <summary>
-        /// 로드된 모든 Scene의 정보를 가져옵니다.
-        /// </summary>
-        /// <returns>Scene 정보 리스트</returns>
-        public static List<string> GetLoadedSceneNames()
-        {
-            List<string> sceneNames = new List<string>();
-            
-            for (int i = 0; i < SceneManager.sceneCount; i++)
-            {
-                Scene scene = SceneManager.GetSceneAt(i);
-                if (scene.isLoaded)
-                {
-                    sceneNames.Add(scene.name);
-                }
-            }
-
-            return sceneNames;
-        }
-
-        /// <summary>
-        /// Scene의 루트 오브젝트들을 가져옵니다.
-        /// </summary>
-        /// <param name="scene">대상 Scene (null이면 활성 Scene)</param>
-        /// <returns>루트 오브젝트들</returns>
-        public static GameObject[] GetRootGameObjects(Scene? scene = null)
-        {
-            Scene targetScene = scene ?? GetActiveScene();
-            
-            if (!targetScene.isLoaded)
-            {
-                DannectLogger.LogWarning($"Scene이 로드되지 않았습니다: {targetScene.name}");
-                return new GameObject[0];
-            }
-
-            return targetScene.GetRootGameObjects();
-        }
-        #endregion
-
-        #region 설정 기반 검색
-        /// <summary>
-        /// 설정을 기반으로 팝업 오브젝트들을 찾습니다.
-        /// </summary>
-        /// <param name="config">설정 파일</param>
-        /// <returns>찾은 팝업 오브젝트들</returns>
-        public static List<GameObject> FindPopupObjects(DannectToolkitConfig config)
-        {
-            if (config == null)
-            {
-                DannectLogger.LogError("config가 null입니다.");
-                return new List<GameObject>();
-            }
-
-            var sceneSettings = config.SceneSettings;
-            return FindGameObjectsByNames(sceneSettings.popupObjectNames.ToArray());
-        }
-
-        /// <summary>
-        /// 설정을 기반으로 루트 검색 오브젝트들을 찾습니다.
-        /// </summary>
-        /// <param name="config">설정 파일</param>
-        /// <returns>찾은 루트 오브젝트들</returns>
-        public static List<GameObject> FindSearchRootObjects(DannectToolkitConfig config)
-        {
-            if (config == null)
-            {
-                DannectLogger.LogError("config가 null입니다.");
-                return new List<GameObject>();
-            }
-
-            var sceneSettings = config.SceneSettings;
-            return FindGameObjectsByNames(sceneSettings.searchRootObjects.ToArray());
-        }
-        #endregion
-
-        #region 계층구조 유틸리티
-        /// <summary>
-        /// GameObject의 전체 계층 경로를 가져옵니다.
-        /// </summary>
-        /// <param name="obj">대상 GameObject</param>
-        /// <returns>계층 경로 문자열</returns>
-        public static string GetHierarchyPath(GameObject obj)
-        {
-            if (obj == null)
-                return "null";
-
-            string path = obj.name;
-            Transform parent = obj.transform.parent;
-
-            while (parent != null)
-            {
-                path = parent.name + "/" + path;
-                parent = parent.parent;
-            }
-
-            return path;
-        }
-
-        /// <summary>
-        /// 자식 오브젝트들을 재귀적으로 검색합니다.
-        /// </summary>
-        /// <param name="parent">부모 오브젝트</param>
-        /// <param name="searchName">찾을 이름</param>
-        /// <param name="exactMatch">정확한 매칭 여부</param>
-        /// <returns>찾은 자식 오브젝트</returns>
-        public static GameObject FindChildRecursive(GameObject parent, string searchName, bool exactMatch = true)
-        {
-            if (parent == null || string.IsNullOrEmpty(searchName))
+                DannectLogger.LogError("오브젝트 이름 목록이 비어있습니다.");
                 return null;
-
-            // 직접 자식들에서 먼저 찾기
-            for (int i = 0; i < parent.transform.childCount; i++)
-            {
-                Transform child = parent.transform.GetChild(i);
-                
-                bool isMatch = exactMatch ? 
-                    child.name == searchName : 
-                    child.name.Contains(searchName);
-
-                if (isMatch)
-                {
-                    return child.gameObject;
-                }
             }
 
-            // 재귀적으로 자식들의 자식에서 찾기
-            for (int i = 0; i < parent.transform.childCount; i++)
+            foreach (string objectName in objectNames)
             {
-                Transform child = parent.transform.GetChild(i);
-                GameObject found = FindChildRecursive(child.gameObject, searchName, exactMatch);
+                GameObject found = FindGameObjectByName(objectName);
                 if (found != null)
                 {
                     return found;
                 }
             }
 
+            string nameList = string.Join(", ", objectNames);
+            DannectLogger.LogWarning($"다음 오브젝트들을 찾을 수 없습니다: {nameList}");
             return null;
         }
         #endregion
 
-        #region 디버그 유틸리티
+        #region Scene 관리
         /// <summary>
-        /// Scene의 모든 오브젝트 계층구조를 로그로 출력합니다.
+        /// 현재 Scene의 정보를 반환합니다.
         /// </summary>
-        /// <param name="maxDepth">최대 깊이 (기본값: 3)</param>
-        public static void LogSceneHierarchy(int maxDepth = 3)
+        /// <returns>Scene 정보 문자열</returns>
+        public static string GetCurrentSceneInfo()
         {
-            Scene activeScene = GetActiveScene();
-            DannectLogger.Log($"=== Scene Hierarchy: {activeScene.name} ===");
-
-            GameObject[] rootObjects = GetRootGameObjects();
-            foreach (GameObject root in rootObjects)
+            try
             {
-                LogObjectHierarchy(root, 0, maxDepth);
-            }
+                Scene currentScene = SceneManager.GetActiveScene();
+                string info = $"Scene 이름: {currentScene.name}\n";
+                info += $"Scene 경로: {currentScene.path}\n";
+                info += $"빌드 인덱스: {currentScene.buildIndex}\n";
+                info += $"로드 여부: {currentScene.isLoaded}\n";
+                info += $"유효성: {currentScene.IsValid()}\n";
+                info += $"루트 오브젝트 수: {currentScene.rootCount}\n";
 
-            DannectLogger.Log("=== End of Scene Hierarchy ===");
+                return info;
+            }
+            catch (Exception e)
+            {
+                DannectLogger.LogException("Scene 정보 가져오기 중 오류 발생", e);
+                return "Scene 정보를 가져올 수 없습니다.";
+            }
         }
 
         /// <summary>
-        /// 특정 오브젝트의 계층구조를 로그로 출력합니다.
+        /// 현재 Scene의 모든 루트 GameObject를 반환합니다.
         /// </summary>
-        /// <param name="obj">대상 오브젝트</param>
-        /// <param name="currentDepth">현재 깊이</param>
-        /// <param name="maxDepth">최대 깊이</param>
-        private static void LogObjectHierarchy(GameObject obj, int currentDepth, int maxDepth)
+        /// <returns>루트 GameObject 배열</returns>
+        public static GameObject[] GetRootGameObjects()
         {
-            if (obj == null || currentDepth > maxDepth)
+            try
+            {
+                Scene currentScene = SceneManager.GetActiveScene();
+                return currentScene.GetRootGameObjects();
+            }
+            catch (Exception e)
+            {
+                SimGroundLogger.LogException("루트 오브젝트 가져오기 중 오류 발생", e);
+                return new GameObject[0];
+            }
+        }
+
+        /// <summary>
+        /// Scene의 계층구조를 로그로 출력합니다.
+        /// </summary>
+        /// <param name="maxDepth">최대 출력 깊이 (기본: 3)</param>
+        public static void LogSceneHierarchy(int maxDepth = 3)
+        {
+            try
+            {
+                SimGroundLogger.Log("=== Scene 계층구조 ===");
+                
+                GameObject[] rootObjects = GetRootGameObjects();
+                foreach (GameObject rootObject in rootObjects)
+                {
+                    LogObjectHierarchy(rootObject.transform, 0, maxDepth);
+                }
+                
+                SimGroundLogger.Log("=====================");
+            }
+            catch (Exception e)
+            {
+                SimGroundLogger.LogException("Scene 계층구조 출력 중 오류 발생", e);
+            }
+        }
+
+        /// <summary>
+        /// 특정 오브젝트의 계층구조를 재귀적으로 로그 출력합니다.
+        /// </summary>
+        /// <param name="transform">출력할 Transform</param>
+        /// <param name="depth">현재 깊이</param>
+        /// <param name="maxDepth">최대 깊이</param>
+        private static void LogObjectHierarchy(Transform transform, int depth, int maxDepth)
+        {
+            if (depth > maxDepth)
                 return;
 
-            string indent = new string(' ', currentDepth * 2);
-            string activeStatus = obj.activeInHierarchy ? "[Active]" : "[Inactive]";
-            
-            DannectLogger.Log($"{indent}{obj.name} {activeStatus}");
+            string indent = new string(' ', depth * 2);
+            string status = transform.gameObject.activeInHierarchy ? "✓" : "✗";
+            SimGroundLogger.Log($"{indent}{status} {transform.name}");
 
-            // 자식 오브젝트들 출력
-            for (int i = 0; i < obj.transform.childCount; i++)
+            for (int i = 0; i < transform.childCount; i++)
             {
-                Transform child = obj.transform.GetChild(i);
-                LogObjectHierarchy(child.gameObject, currentDepth + 1, maxDepth);
+                LogObjectHierarchy(transform.GetChild(i), depth + 1, maxDepth);
+            }
+        }
+        #endregion
+
+        #region GameObject 분석
+        /// <summary>
+        /// GameObject의 컴포넌트 정보를 반환합니다.
+        /// </summary>
+        /// <param name="gameObject">분석할 GameObject</param>
+        /// <returns>컴포넌트 정보 문자열</returns>
+        public static string GetGameObjectInfo(GameObject gameObject)
+        {
+            if (gameObject == null)
+            {
+                return "GameObject가 null입니다.";
+            }
+
+            try
+            {
+                string info = $"GameObject: {gameObject.name}\n";
+                info += $"활성화: {gameObject.activeInHierarchy}\n";
+                info += $"태그: {gameObject.tag}\n";
+                info += $"레이어: {LayerMask.LayerToName(gameObject.layer)}\n";
+                info += $"자식 수: {gameObject.transform.childCount}\n";
+
+                Component[] components = gameObject.GetComponents<Component>();
+                info += $"컴포넌트 수: {components.Length}\n";
+                info += "컴포넌트 목록:\n";
+
+                foreach (Component component in components)
+                {
+                    if (component != null)
+                    {
+                        info += $"  - {component.GetType().Name}\n";
+                    }
+                }
+
+                return info;
+            }
+            catch (Exception e)
+            {
+                SimGroundLogger.LogException("GameObject 정보 분석 중 오류 발생", e);
+                return "GameObject 정보를 분석할 수 없습니다.";
+            }
+        }
+
+        /// <summary>
+        /// GameObject의 위치 정보를 반환합니다.
+        /// </summary>
+        /// <param name="gameObject">분석할 GameObject</param>
+        /// <returns>위치 정보 문자열</returns>
+        public static string GetTransformInfo(GameObject gameObject)
+        {
+            if (gameObject == null)
+            {
+                return "GameObject가 null입니다.";
+            }
+
+            try
+            {
+                Transform transform = gameObject.transform;
+                string info = $"Transform 정보: {gameObject.name}\n";
+                info += $"위치: {transform.position}\n";
+                info += $"회전: {transform.rotation.eulerAngles}\n";
+                info += $"크기: {transform.localScale}\n";
+
+                RectTransform rectTransform = gameObject.GetComponent<RectTransform>();
+                if (rectTransform != null)
+                {
+                    info += $"앵커 위치: {rectTransform.anchoredPosition}\n";
+                    info += $"크기 델타: {rectTransform.sizeDelta}\n";
+                    info += $"앵커 최소: {rectTransform.anchorMin}\n";
+                    info += $"앵커 최대: {rectTransform.anchorMax}\n";
+                }
+
+                return info;
+            }
+            catch (Exception e)
+            {
+                SimGroundLogger.LogException("Transform 정보 분석 중 오류 발생", e);
+                return "Transform 정보를 분석할 수 없습니다.";
+            }
+        }
+        #endregion
+
+        #region 유틸리티 메소드
+        /// <summary>
+        /// 지정된 이름들의 오브젝트가 Scene에 존재하는지 확인합니다.
+        /// </summary>
+        /// <param name="objectNames">확인할 오브젝트 이름들</param>
+        /// <returns>존재하는 오브젝트들의 Dictionary</returns>
+        public static Dictionary<string, bool> CheckObjectsExist(params string[] objectNames)
+        {
+            Dictionary<string, bool> results = new Dictionary<string, bool>();
+
+            if (objectNames == null)
+            {
+                SimGroundLogger.LogWarning("오브젝트 이름 목록이 null입니다.");
+                return results;
+            }
+
+            foreach (string objectName in objectNames)
+            {
+                GameObject obj = FindGameObjectByName(objectName);
+                results[objectName] = obj != null;
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// Scene에서 특정 조건을 만족하는 모든 GameObject를 찾습니다.
+        /// </summary>
+        /// <param name="predicate">조건 함수</param>
+        /// <returns>조건을 만족하는 GameObject 목록</returns>
+        public static List<GameObject> FindGameObjectsWhere(System.Func<GameObject, bool> predicate)
+        {
+            List<GameObject> results = new List<GameObject>();
+
+            if (predicate == null)
+            {
+                SimGroundLogger.LogError("조건 함수가 null입니다.");
+                return results;
+            }
+
+            try
+            {
+                GameObject[] allObjects = Resources.FindObjectsOfTypeAll<GameObject>();
+                
+                foreach (GameObject obj in allObjects)
+                {
+                    if (obj.hideFlags == HideFlags.None && predicate(obj))
+                    {
+                        results.Add(obj);
+                    }
+                }
+
+                SimGroundLogger.LogVerbose($"조건을 만족하는 오브젝트 {results.Count}개를 찾았습니다.");
+            }
+            catch (Exception e)
+            {
+                SimGroundLogger.LogException("조건부 오브젝트 검색 중 오류 발생", e);
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// Scene 통계 정보를 반환합니다.
+        /// </summary>
+        /// <returns>Scene 통계 정보</returns>
+        public static string GetSceneStatistics()
+        {
+            try
+            {
+                GameObject[] allObjects = Resources.FindObjectsOfTypeAll<GameObject>();
+                var sceneObjects = allObjects.Where(obj => obj.hideFlags == HideFlags.None).ToArray();
+                
+                int activeObjects = sceneObjects.Count(obj => obj.activeInHierarchy);
+                int inactiveObjects = sceneObjects.Length - activeObjects;
+                
+                var componentCounts = new Dictionary<string, int>();
+                foreach (GameObject obj in sceneObjects)
+                {
+                    Component[] components = obj.GetComponents<Component>();
+                    foreach (Component comp in components)
+                    {
+                        if (comp != null)
+                        {
+                            string typeName = comp.GetType().Name;
+                            componentCounts[typeName] = componentCounts.GetValueOrDefault(typeName, 0) + 1;
+                        }
+                    }
+                }
+
+                string stats = "=== Scene 통계 ===\n";
+                stats += $"전체 오브젝트: {sceneObjects.Length}\n";
+                stats += $"활성화된 오브젝트: {activeObjects}\n";
+                stats += $"비활성화된 오브젝트: {inactiveObjects}\n";
+                stats += $"고유 컴포넌트 타입: {componentCounts.Count}\n";
+                stats += "\n주요 컴포넌트:\n";
+
+                var topComponents = componentCounts.OrderByDescending(kvp => kvp.Value).Take(10);
+                foreach (var kvp in topComponents)
+                {
+                    stats += $"  {kvp.Key}: {kvp.Value}개\n";
+                }
+
+                return stats;
+            }
+            catch (Exception e)
+            {
+                SimGroundLogger.LogException("Scene 통계 수집 중 오류 발생", e);
+                return "Scene 통계를 수집할 수 없습니다.";
             }
         }
         #endregion

@@ -8,9 +8,9 @@ namespace Dannect.Unity.Toolkit
     public class DannectToolkitConfig : ScriptableObject
     {
         [Header("🔧 일반 설정")]
-        [SerializeField] private string m_projectName = "Unity Project";
-        [SerializeField] private string m_companyName = "Educational Software";
-        [SerializeField] private string m_version = "1.0.0";
+        [SerializeField] private string m_projectName = "Dannect Unity Project";
+        [SerializeField] private string m_companyName = "Dannect";
+        [SerializeField] private string m_version = "2.0.0";
         
         [Header("🎯 버튼 유틸리티 설정")]
         [SerializeField] private ButtonSettings m_buttonSettings = new ButtonSettings();
@@ -41,9 +41,9 @@ namespace Dannect.Unity.Toolkit
         [ContextMenu("기본값으로 초기화")]
         public void ResetToDefaults()
         {
-            m_projectName = "Unity Project";
-            m_companyName = "Educational Software";
-            m_version = "1.0.0";
+            m_projectName = "Dannect Unity Project";
+            m_companyName = "Dannect";
+            m_version = "2.0.0";
             
             m_buttonSettings = new ButtonSettings();
             m_webglSettings = new WebGLSettings();

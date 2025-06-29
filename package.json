@@ -13,14 +13,14 @@
     "toolkit"
   ],
   "author": {
-    "name": "Dannect",
-    "email": "dannect@example.com",
-    "url": "https://github.com/dannect"
+    "name": "Lim-jooyoung",
+    "email": "ljy1209@dannect.com",
+    "url": "https://github.com/mmporong"
   },
   "dependencies": {},
   "repository": {
     "type": "git",
-    "url": "https://github.com/dannect/unity-toolkit.git"
+    "url": "https://github.com/mmporong/dannect-unity-toolkit.git"
   },
   "license": "MIT",
   "samples": [
