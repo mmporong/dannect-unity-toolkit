@@ -211,11 +211,69 @@ namespace Dannect.Unity.Toolkit
 
             try
             {
-                // 1. 대상 오브젝트 찾기
-                GameObject targetObject = SceneUtility.FindComponentInScene(className);
+                // 1. 대상 오브젝트 찾기 (다중 방법 시도)
+                GameObject targetObject = null;
+                
+                // 방법 1: SceneUtility 사용
+                try
+                {
+                    targetObject = SceneUtility.FindComponentInScene(className);
+                    if (targetObject != null)
+                    {
+                        DannectLogger.LogVerbose($"SceneUtility로 오브젝트 찾기 성공: {targetObject.name}");
+                    }
+                }
+                catch (Exception sceneUtilException)
+                {
+                    DannectLogger.LogWarning($"SceneUtility 실패: {sceneUtilException.Message}");
+                }
+                
+                // 방법 2: GameObject.Find (이름으로 직접 찾기)
                 if (targetObject == null)
                 {
-                    DannectLogger.LogError($"{className} 컴포넌트를 가진 오브젝트를 찾을 수 없습니다.");
+                    targetObject = GameObject.Find(className);
+                    if (targetObject != null)
+                    {
+                        DannectLogger.LogVerbose($"GameObject.Find로 오브젝트 찾기 성공: {targetObject.name}");
+                    }
+                }
+                
+                // 방법 3: FindFirstObjectByType 사용 (다양한 네임스페이스 시도)
+                if (targetObject == null)
+                {
+                    string[] possibleTypeNames = {
+                        className,
+                        $"HeatFlowInFluid.{className}",
+                        $"global::{className}",
+                        $"UnityEngine.{className}"
+                    };
+                    
+                    foreach (string typeName in possibleTypeNames)
+                    {
+                        try
+                        {
+                            System.Type componentType = System.Type.GetType(typeName);
+                            if (componentType != null && typeof(Component).IsAssignableFrom(componentType))
+                            {
+                                Component foundComponent = UnityEngine.Object.FindFirstObjectByType(componentType) as Component;
+                                if (foundComponent != null)
+                                {
+                                    targetObject = foundComponent.gameObject;
+                                    DannectLogger.LogVerbose($"FindFirstObjectByType로 오브젝트 찾기 성공: {targetObject.name} (타입: {typeName})");
+                                    break;
+                                }
+                            }
+                        }
+                        catch (Exception findObjectException)
+                        {
+                            DannectLogger.LogVerbose($"FindFirstObjectByType 실패 ({typeName}): {findObjectException.Message}");
+                        }
+                    }
+                }
+                
+                if (targetObject == null)
+                {
+                    DannectLogger.LogError($"{className} 컴포넌트를 가진 오브젝트를 찾을 수 없습니다. 씬에 '{className}' GameObject가 있고 해당 스크립트가 붙어있는지 확인하세요.");
                     return false;
                 }
 
@@ -227,38 +285,85 @@ namespace Dannect.Unity.Toolkit
                     return false;
                 }
 
-                // 3. onClick 이벤트 초기화
+                // 3. 메서드 존재 여부 확인
+                MethodInfo targetMethod = targetComponent.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance);
+                if (targetMethod == null)
+                {
+                    DannectLogger.LogError($"메소드를 찾을 수 없습니다: {className}.{methodName}");
+                    return false;
+                }
+
+                // 4. onClick 이벤트 초기화
                 button.onClick = new Button.ButtonClickedEvent();
 
 #if UNITY_EDITOR
-                // 4. Persistent Listener 추가 (Editor에서만)
-                UnityEventTools.AddPersistentListener(button.onClick, () => {
-                    MethodInfo method = targetComponent.GetType().GetMethod(methodName);
-                    if (method != null)
+                // 5. SerializedObject를 사용한 Persistent Listener 연결 (Editor 전용)
+                try
+                {
+                    // SerializedObject로 Button의 onClick 이벤트에 접근
+                    SerializedObject serializedButton = new SerializedObject(button);
+                    SerializedProperty onClickProperty = serializedButton.FindProperty("m_OnClick");
+                    
+                    if (onClickProperty != null)
                     {
-                        method.Invoke(targetComponent, null);
-                    }
-                });
-
-                // Inspector 업데이트
-                EditorUtility.SetDirty(button);
-                DannectLogger.LogVerbose("Persistent Listener 추가 완료");
-#endif
-
-                // 5. Runtime Listener 추가 (백업용)
-                button.onClick.AddListener(() => {
-                    MethodInfo method = targetComponent.GetType().GetMethod(methodName);
-                    if (method != null)
-                    {
-                        method.Invoke(targetComponent, null);
+                        // Persistent Calls 배열에 접근
+                        SerializedProperty persistentCallsProperty = onClickProperty.FindPropertyRelative("m_PersistentCalls");
+                        SerializedProperty callsProperty = persistentCallsProperty.FindPropertyRelative("m_Calls");
+                        
+                        // 새 Persistent Call 추가
+                        int newIndex = callsProperty.arraySize;
+                        callsProperty.InsertArrayElementAtIndex(newIndex);
+                        
+                        SerializedProperty newCall = callsProperty.GetArrayElementAtIndex(newIndex);
+                        
+                        // 대상 오브젝트 설정
+                        SerializedProperty targetProperty = newCall.FindPropertyRelative("m_Target");
+                        targetProperty.objectReferenceValue = targetComponent;
+                        
+                        // 메서드 이름 설정
+                        SerializedProperty methodNameProperty = newCall.FindPropertyRelative("m_MethodName");
+                        methodNameProperty.stringValue = methodName;
+                        
+                        // 호출 상태 설정 (Runtime And Editor)
+                        SerializedProperty callStateProperty = newCall.FindPropertyRelative("m_CallState");
+                        callStateProperty.enumValueIndex = (int)UnityEngine.Events.UnityEventCallState.RuntimeOnly;
+                        
+                        // Mode 설정 (Void - 매개변수 없음)
+                        SerializedProperty modeProperty = newCall.FindPropertyRelative("m_Mode");
+                        modeProperty.enumValueIndex = (int)UnityEngine.Events.PersistentListenerMode.Void;
+                        
+                        // 변경사항 적용
+                        serializedButton.ApplyModifiedProperties();
+                        EditorUtility.SetDirty(button);
+                        
+                        DannectLogger.LogSuccess($"Persistent Listener 연결 완료: {className}.{methodName}");
                     }
                     else
                     {
-                        DannectLogger.LogError($"메소드를 찾을 수 없습니다: {methodName}");
+                        DannectLogger.LogWarning("onClick 프로퍼티를 찾을 수 없습니다.");
+                    }
+                }
+                catch (Exception persistentException)
+                {
+                    DannectLogger.LogWarning($"Persistent Listener 연결 실패: {persistentException.Message}");
+                    DannectLogger.LogVerbose($"스택 트레이스: {persistentException.StackTrace}");
+                }
+#endif
+
+                // 6. Runtime Listener 추가 (항상 실행, 백업용)
+                button.onClick.AddListener(() => {
+                    try
+                    {
+                        targetMethod.Invoke(targetComponent, null);
+                        DannectLogger.LogVerbose($"Runtime 메소드 호출 성공: {className}.{methodName}");
+                    }
+                    catch (Exception runtimeException)
+                    {
+                        DannectLogger.LogError($"Runtime 메소드 호출 실패: {runtimeException.Message}");
                     }
                 });
 
-                DannectLogger.LogSuccess($"메소드 연결 완료: {className}.{methodName}");
+                DannectLogger.LogSuccess($"버튼 이벤트 연결 완료: {className}.{methodName}");
                 return true;
             }
             catch (Exception e)
