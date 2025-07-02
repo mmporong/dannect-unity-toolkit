@@ -22,18 +22,30 @@ class UnityPathManager:
         logger.progress("Unity Editor 경로 검색 중...")
         
         for base_path in DEFAULT_UNITY_PATHS:
+            logger.debug(f"검색 중인 기본 경로: {base_path}")
+            
             if not os.path.exists(base_path):
+                logger.debug(f"경로가 존재하지 않음: {base_path}")
                 continue
+            
+            logger.debug(f"경로 확인됨: {base_path}")
             
             try:
                 # 버전 폴더들 검색
-                for item in os.listdir(base_path):
+                items = os.listdir(base_path)
+                logger.debug(f"발견된 항목들: {items}")
+                
+                for item in items:
                     item_path = os.path.join(base_path, item)
                     if os.path.isdir(item_path):
                         unity_exe = os.path.join(item_path, "Editor", "Unity.exe")
+                        logger.debug(f"Unity.exe 확인 중: {unity_exe}")
+                        
                         if os.path.exists(unity_exe):
                             logger.info(f"Unity Editor 발견: {unity_exe}")
                             return unity_exe
+                        else:
+                            logger.debug(f"Unity.exe 없음: {unity_exe}")
             except Exception as e:
                 logger.debug(f"경로 검색 중 오류: {base_path} - {e}")
         
@@ -146,7 +158,7 @@ class UnityProjectManager:
             with open(manifest_path, 'r', encoding='utf-8') as f:
                 manifest = json.load(f)
                 dependencies = manifest.get("dependencies", {})
-                return "com.dannect.toolkit" in dependencies
+                return "com.dannect.unity.toolkit" in dependencies
         except Exception:
             return False
 

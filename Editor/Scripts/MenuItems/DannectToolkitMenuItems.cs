@@ -364,7 +364,246 @@ namespace Dannect.Unity.Toolkit.Editor
         }
         #endregion
 
+        #region CLI 메소드 (Python 연동용)
+        /// <summary>
+        /// CLI에서 All-in-One 테스트 실행
+        /// </summary>
+        public static void CLI_AllInOneRebuildButtonTest()
+        {
+            try
+            {
+                DannectLogger.LogStart("=== CLI All-in-One 테스트 시작 ===");
+                
+                bool success = ExecuteAllInOneTest();
+                
+                if (success)
+                {
+                    DannectLogger.LogComplete("=== CLI All-in-One 테스트 성공 ===");
+                }
+                else
+                {
+                    DannectLogger.LogError("=== CLI All-in-One 테스트 실패 ===");
+                }
+            }
+            catch (Exception e)
+            {
+                DannectLogger.LogException("CLI All-in-One 테스트 중 오류 발생", e);
+            }
+        }
+
+        /// <summary>
+        /// CLI에서 Rebuild 버튼 생성
+        /// </summary>
+        public static void CLI_CreateRebuildButton()
+        {
+            try
+            {
+                DannectLogger.LogStart("=== CLI Rebuild 버튼 생성 시작 ===");
+                
+                var config = DannectToolkitEditorCore.LoadOrCreateConfig();
+                if (config == null)
+                {
+                    DannectLogger.LogError("Config 로드 실패");
+                    return;
+                }
+
+                GameObject rebuildButton = ButtonUtility.CreateRebuildButtonAuto(config);
+                
+                if (rebuildButton != null)
+                {
+                    DannectToolkitEditorCore.SaveSceneIfNeeded();
+                    DannectLogger.LogComplete("=== CLI Rebuild 버튼 생성 성공 ===");
+                }
+                else
+                {
+                    DannectLogger.LogError("=== CLI Rebuild 버튼 생성 실패 ===");
+                }
+            }
+            catch (Exception e)
+            {
+                DannectLogger.LogException("CLI Rebuild 버튼 생성 중 오류 발생", e);
+            }
+        }
+
+        /// <summary>
+        /// CLI에서 Rebuild 버튼 테스트
+        /// </summary>
+        public static void CLI_TestRebuildButtonClick()
+        {
+            try
+            {
+                DannectLogger.LogStart("=== CLI Rebuild 버튼 테스트 시작 ===");
+                
+                GameObject rebuildButton = ButtonUtility.FindButton("Rebuild_Btn");
+                if (rebuildButton != null)
+                {
+                    Button buttonComponent = rebuildButton.GetComponent<Button>();
+                    if (buttonComponent != null)
+                    {
+                        ButtonUtility.LogButtonState(buttonComponent);
+                        buttonComponent.onClick.Invoke();
+                        DannectLogger.LogComplete("=== CLI Rebuild 버튼 테스트 성공 ===");
+                    }
+                    else
+                    {
+                        DannectLogger.LogError("Button 컴포넌트를 찾을 수 없습니다.");
+                    }
+                }
+                else
+                {
+                    DannectLogger.LogError("Rebuild_Btn을 찾을 수 없습니다.");
+                }
+            }
+            catch (Exception e)
+            {
+                DannectLogger.LogException("CLI Rebuild 버튼 테스트 중 오류 발생", e);
+            }
+        }
+
+        /// <summary>
+        /// CLI에서 Success_Pop 디버그
+        /// </summary>
+        public static void CLI_DebugFindSuccessPop()
+        {
+            try
+            {
+                DannectLogger.LogStart("=== CLI Success_Pop 디버그 시작 ===");
+                
+                GameObject successPop = SceneUtility.FindGameObjectByName("Success_Pop");
+                if (successPop != null)
+                {
+                    string info = SceneUtility.GetGameObjectInfo(successPop);
+                    DannectLogger.LogSuccess($"Success_Pop 발견!\n{info}");
+                    DannectLogger.LogComplete("=== CLI Success_Pop 디버그 성공 ===");
+                }
+                else
+                {
+                    DannectLogger.LogError("Success_Pop을 찾을 수 없습니다.");
+                }
+            }
+            catch (Exception e)
+            {
+                DannectLogger.LogException("CLI Success_Pop 디버그 중 오류 발생", e);
+            }
+        }
+
+        /// <summary>
+        /// CLI에서 버튼 이벤트 확인
+        /// </summary>
+        public static void CLI_CheckRebuildButtonEvents()
+        {
+            try
+            {
+                DannectLogger.LogStart("=== CLI 버튼 이벤트 확인 시작 ===");
+                
+                GameObject rebuildButton = ButtonUtility.FindButton("Rebuild_Btn");
+                if (rebuildButton != null)
+                {
+                    Button buttonComponent = rebuildButton.GetComponent<Button>();
+                    if (buttonComponent != null)
+                    {
+                        ButtonUtility.LogButtonState(buttonComponent);
+                        DannectLogger.LogComplete("=== CLI 버튼 이벤트 확인 성공 ===");
+                    }
+                    else
+                    {
+                        DannectLogger.LogError("Button 컴포넌트를 찾을 수 없습니다.");
+                    }
+                }
+                else
+                {
+                    DannectLogger.LogError("Rebuild_Btn을 찾을 수 없습니다.");
+                }
+            }
+            catch (Exception e)
+            {
+                DannectLogger.LogException("CLI 버튼 이벤트 확인 중 오류 발생", e);
+            }
+        }
+
+        /// <summary>
+        /// CLI 테스트 모드 - 기본 연동 확인
+        /// </summary>
+        public static void CLI_TestCLIMode()
+        {
+            try
+            {
+                DannectLogger.LogStart("=== CLI 테스트 모드 시작 ===");
+                
+                string projectInfo = DannectToolkitEditorCore.GetProjectInfo();
+                DannectLogger.Log($"프로젝트 정보:\n{projectInfo}");
+                
+                var config = DannectToolkitEditorCore.LoadOrCreateConfig();
+                if (config != null)
+                {
+                    DannectLogger.LogSuccess("Config 로드 성공");
+                }
+                else
+                {
+                    DannectLogger.LogError("Config 로드 실패");
+                }
+                
+                DannectLogger.LogComplete("=== CLI 테스트 모드 성공 ===");
+            }
+            catch (Exception e)
+            {
+                DannectLogger.LogException("CLI 테스트 모드 중 오류 발생", e);
+            }
+        }
+        #endregion
+
         #region 유틸리티 메소드
+        /// <summary>
+        /// All-in-One 테스트를 실행합니다.
+        /// </summary>
+        /// <returns>성공 여부</returns>
+        private static bool ExecuteAllInOneTest()
+        {
+            try
+            {
+                // 1. Scene 로드 확인
+                if (!DannectToolkitEditorCore.EnsureSceneLoaded())
+                {
+                    DannectLogger.LogError("Scene 로드 실패");
+                    return false;
+                }
+
+                // 2. Config 로드
+                var config = DannectToolkitEditorCore.LoadOrCreateConfig();
+                if (config == null)
+                {
+                    DannectLogger.LogError("Config 로드 실패");
+                    return false;
+                }
+
+                // 3. Rebuild 버튼 생성
+                GameObject rebuildButton = ButtonUtility.CreateRebuildButtonAuto(config);
+                if (rebuildButton == null)
+                {
+                    DannectLogger.LogError("Rebuild 버튼 생성 실패");
+                    return false;
+                }
+
+                // 4. 버튼 테스트
+                Button buttonComponent = rebuildButton.GetComponent<Button>();
+                if (buttonComponent != null)
+                {
+                    ButtonUtility.LogButtonState(buttonComponent);
+                    buttonComponent.onClick.Invoke();
+                }
+
+                // 5. Scene 저장
+                DannectToolkitEditorCore.SaveSceneIfNeeded();
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                DannectLogger.LogException("All-in-One 테스트 실행 중 오류 발생", e);
+                return false;
+            }
+        }
+
         /// <summary>
         /// Progress Bar와 함께 작업을 실행합니다.
         /// </summary>

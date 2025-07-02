@@ -21,7 +21,7 @@ setup(
     description="범용 Unity 개발 자동화 도구",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/mmporong/unity-toolkit",
+    url="https://github.com/mmporong/dannect-unity-toolkit",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -47,8 +47,8 @@ setup(
     zip_safe=False,
     keywords="unity, automation, cli, webgl, build, git",
     project_urls={
-        "Bug Reports": "https://github.com/mmporong/unity-toolkit/issues",
-        "Source": "https://github.com/mmporong/unity-toolkit",
-        "Documentation": "https://github.com/mmporong/unity-toolkit/blob/main/README.md",
+        "Bug Reports": "https://github.com/mmporong/dannect-unity-toolkit/issues",
+        "Source": "https://github.com/mmporong/dannect-unity-toolkit",
+        "Documentation": "https://github.com/mmporong/dannect-unity-toolkit/blob/main/README.md",
     },
 ) 

@@ -60,19 +60,6 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help="툴킷 설정 파일 (JSON 형식)"
     )
     
-    # 액션 및 워크플로우
-    action_group = parser.add_mutually_exclusive_group(required=True)
-    action_group.add_argument(
-        "--action", 
-        choices=[action.value for action in ActionType],
-        help="실행할 액션"
-    )
-    action_group.add_argument(
-        "--workflow", 
-        choices=[workflow.value for workflow in WorkflowType],
-        help="실행할 워크플로우"
-    )
-    
     # 실행 옵션들
     parser.add_argument(
         "--parallel", 
@@ -136,6 +123,24 @@ def create_argument_parser() -> argparse.ArgumentParser:
         "--version", 
         action="version", 
         version="Dannect Unity Toolkit v2.0.0"
+    )
+    
+    parser.add_argument(
+        "--unity-path",
+        help="Unity Editor 실행 파일(Unity.exe) 절대 경로"
+    )
+    
+    # 액션 및 워크플로우
+    action_group = parser.add_mutually_exclusive_group(required=True)
+    action_group.add_argument(
+        "--action",
+        choices=[action.value for action in ActionType],
+        help="실행할 액션"
+    )
+    action_group.add_argument(
+        "--workflow",
+        choices=[workflow.value for workflow in WorkflowType],
+        help="실행할 워크플로우"
     )
     
     return parser
@@ -241,6 +246,8 @@ def main():
     config.max_parallel_workers = args.max_workers
     config.default_timeout = args.timeout
     config.log_level = args.log_level
+    if args.unity_path:
+        config.unity_editor_path = args.unity_path
     
     # 명령어 실행
     try:

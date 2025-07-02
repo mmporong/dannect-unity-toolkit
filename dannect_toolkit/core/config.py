@@ -70,7 +70,7 @@ class ToolkitConfig:
         # 기본 Git 패키지 설정
         if not self.git_packages:
             self.git_packages = {
-                "com.dannect.toolkit": "https://github.com/mmporong/unity-toolkit.git"
+                "com.dannect.unity.toolkit": "https://github.com/mmporong/dannect-unity-toolkit.git"
             }
         
         if self.project_directories is None:

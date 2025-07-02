@@ -82,7 +82,7 @@ class ToolkitConfig:
     def __post_init__(self):
         if self.git_packages is None:
             self.git_packages = {
-                "com.dannect.toolkit": "https://github.com/mmporong/unity-toolkit.git"
+                "com.dannect.toolkit": "https://github.com/mmporong/dannect-unity-toolkit.git"
             }
         if self.project_directories is None:
             self.project_directories = []

@@ -118,6 +118,10 @@ class DannectUnityToolkit:
                 return SystemManagerEditor.add_rebuild_method(project)
             elif action == ActionType.CLEAN_BUILDS:
                 return WebGLBuildManager.clean_webgl_builds(project)
+            elif action == ActionType.CREATE_BUTTON:
+                # 패키지가 설치되어 있다면 업데이트 후 버튼 생성
+                PackageManager.update_packages(project, self.config, force=False)
+                return self.cli_executor.execute_action(project, action)
             else:
                 # 기본 Unity CLI 액션들
                 return self.cli_executor.execute_action(project, action)

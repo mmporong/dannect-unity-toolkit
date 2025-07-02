@@ -91,6 +91,7 @@ DEFAULT_UNITY_PATHS = [
     r"C:\Program Files (x86)\Unity\Hub\Editor", 
     r"D:\Unity\Hub\Editor",
     r"E:\Unity\Hub\Editor",
+    r"D:\Unity",  # 직접 설치된 Unity
     r"C:\Unity",
     "/Applications/Unity/Hub/Editor"  # macOS
 ] 

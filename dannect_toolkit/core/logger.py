@@ -116,6 +116,10 @@ class DannectLogger:
         """Unity 스타일 호환성"""
         self.verbose(message)
 
+    def set_level(self, level: str):
+        """전역 로거 레벨 변경"""
+        self.logger.setLevel(getattr(logging, level.upper()))
+
 
 # 전역 로거 인스턴스 (기존 코드와의 호환성)
 logger = DannectLogger()
